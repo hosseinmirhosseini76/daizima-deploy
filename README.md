@@ -13,10 +13,15 @@ ssh-copy-id -p 15726 root@212.23.201.113
 ۲. Deploy
 
 cd d:/bussiness-work/daizima
+```
 # فقط frontend
+
 ./deploy/deploy-from-local.sh frontend
+
 # فقط backend
+
 ./deploy/deploy-from-local.sh backend
+```
 # هر دو
 ./deploy/deploy-from-local.sh all
 # اگر کد را قبلاً pull کردید:
@@ -28,3 +33,46 @@ pm2 restart daizima-frontend --update-env || pm2 start .output/server/index.mjs 
 pm2 save
 nginx -t && systemctl reload nginx
 pm2 status
+
+
+# برای سینک کردن تصاویر موجود در سرور با لوکال:
+```
+./scripts/sync-production-storage.sh user@server.com /var/www/daizima-backend
+
+
+./scripts/sync-production-storage.sh root@212.23.201.113:15726 /var/www/daizima-backend
+```
+
+# برای سینک کردن دیتابیس لوکال با پروداکشن:
+cd daizima-backend
+```
+./scripts/sync-production-db.sh root@212.23.201.113:15726 /var/www/daizima-backend
+```
+
+# برای دسترسی به دیتابیس روی لوکال:
+cd daizima-backend
+```
+docker exec -it daizima-db mysql -u daizima_user -pdaizima_password daizima
+```
+
+For Deploying BackEnd:
+
+cd /var/www/daizima-backend
+chmod +x update.sh
+./update.sh
+
+instead of these command you can use: (daizima update backend)
+```
+dub
+```
+
+For Deploying FrontEnd:
+
+cd /var/www/daizima-frontend/
+chmod +x update.sh
+./update.sh
+
+instead of these command you can use: (daizima update frontend)
+```
+duf
+```
