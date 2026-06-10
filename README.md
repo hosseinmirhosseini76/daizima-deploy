@@ -76,3 +76,9 @@ instead of these command you can use: (daizima update frontend)
 ```
 duf
 ```
+
+
+Test Sending SMS
+```
+docker-compose exec app php artisan kavenegar:test --send --phone=09194391758
+```
