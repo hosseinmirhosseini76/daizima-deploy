@@ -46,7 +46,7 @@ pm2 status
 # برای سینک کردن دیتابیس لوکال با پروداکشن:
 cd daizima-backend
 ```
-./scripts/sync-production-db.sh root@212.23.201.113:15726 /var/www/daizima-backend
+echo yes | ./scripts/sync-production-db.sh root@212.23.201.113:15726 /var/www/daizima-backend
 ```
 
 # برای دسترسی به دیتابیس روی لوکال:
