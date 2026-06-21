@@ -175,4 +175,4 @@ git push && git push --tags   # در هر ریپو جداگانه
 - دیپلوی: [`../deploy-from-local.sh`](../deploy-from-local.sh)
 - پرداخت ملت: [`../../daizima-backend/docs/mellat-payment-deployment.md`](../../daizima-backend/docs/mellat-payment-deployment.md)
 
-**دایزیما (Daizima)** · http://212.23.201.113/
+**دایزیما (Daizima)** · https://daizima.com/
