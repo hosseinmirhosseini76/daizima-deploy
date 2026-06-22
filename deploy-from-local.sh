@@ -11,6 +11,12 @@
 
 set -e
 
+# Git Bash on Windows converts NUXT_PUBLIC_API_BASE_URL=/api → C:/Program Files/Git/api.
+# Must be set before sourcing deploy.local.env or any export of path-like values.
+if [ -n "${MSYSTEM:-}" ] || [ -n "${WINDIR:-}" ]; then
+  export MSYS_NO_PATHCONV=1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/deploy.local.env"
@@ -121,8 +127,10 @@ deploy_frontend() {
     pnpm install --frozen-lockfile
 
     log_info "Building frontend..."
-    export NUXT_PUBLIC_API_BASE_URL="${NUXT_PUBLIC_API_BASE_URL:-http://${DEPLOY_HOST}/api}"
-    export NUXT_PUBLIC_WEBSOCKET_URL="${NUXT_PUBLIC_WEBSOCKET_URL:-ws://${DEPLOY_HOST}:6001}"
+    export NUXT_PUBLIC_API_BASE_URL="${NUXT_PUBLIC_API_BASE_URL:-/api}"
+    export NUXT_API_PROXY_TARGET="${NUXT_API_PROXY_TARGET:-http://127.0.0.1:8100}"
+    export NUXT_PUBLIC_SITE_URL="${NUXT_PUBLIC_SITE_URL:-https://daizima.com}"
+    export NUXT_PUBLIC_WEBSOCKET_URL="${NUXT_PUBLIC_WEBSOCKET_URL:-wss://daizima.com/ws}"
     export NUXT_PUBLIC_APP_NAME="${NUXT_PUBLIC_APP_NAME:-Daizima}"
     export NUXT_PUBLIC_APP_ENV="${NUXT_PUBLIC_APP_ENV:-production}"
     NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
