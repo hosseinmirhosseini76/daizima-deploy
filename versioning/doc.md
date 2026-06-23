@@ -61,7 +61,8 @@ git add -A && git commit -m "feat: ..."
 | گزینه | کاربرد |
 |--------|--------|
 | `--dry-run` | فقط گزارش؛ بدون نوشتن فایل و بدون تگ |
-| `--yes` / `-y` | بدون پرسش تأیید |
+| `--yes` / `-y` | بدون پرسش تأیید؛ commit خودکار فایل‌های ورژن |
+| `--no-commit` | همراه `--yes`: فقط bump فایل‌ها، بدون `git commit` |
 | `--major` | اجبار bump نسخه اصلی |
 | `--minor` | اجبار bump نسخه فرعی |
 | `--patch` | اجبار bump وصله |
@@ -74,6 +75,9 @@ git add -A && git commit -m "feat: ..."
 ```bash
 ./deploy/versioning/bump-backend.sh --no-tag --yes
 ./deploy/versioning/bump-frontend.sh --no-tag --yes
+
+با `--yes` فایل‌های ورژن بعد از bump **خودکار commit** می‌شوند (`chore(backend|frontend): release vX.Y.Z`).
+برای غیرفعال کردن commit خودکار: `--yes --no-commit`.
 
 ./deploy/versioning/bump-backend.sh --minor --yes
 ./deploy/versioning/bump-frontend.sh --patch --no-tag --allow-dirty
@@ -134,14 +138,9 @@ cd ..
 ./deploy/versioning/bump-backend.sh --yes
 ./deploy/versioning/bump-frontend.sh --yes
 
-# ۳. commit فایل‌های ورژن (اگر اسکریپت قبل از تگ اجرا شده و فایل‌ها مانده‌اند)
-cd daizima-backend && git add VERSION composer.json .env.example && git commit -m "chore(backend): release vX.Y.Z"
-cd ../daizima-frontend && git add VERSION package.json .env.example && git commit -m "chore(frontend): release vX.Y.Z"
-
-# ۴. push کد و تگ‌ها
-git push && git push --tags   # در هر ریپو جداگانه
-
-# ۵. deploy
+# ۳. push (اگر با --yes اجرا کردید، commit ورژن خودکار انجام شده)
+cd daizima-backend && git push
+cd ../daizima-frontend && git push
 ./deploy/deploy-from-local.sh all
 ```
 

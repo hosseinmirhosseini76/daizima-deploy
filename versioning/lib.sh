@@ -292,6 +292,29 @@ ${APP_LABEL} release since ${LAST_TAG}."
   log_info "Created tag: $tag"
 }
 
+commit_version_files() {
+  local msg="chore(${APP_SLUG}): release v${NEW_VERSION}"
+  local files=("VERSION")
+
+  if [ -n "$VERSION_JSON_FILE" ] && [ -f "$APP_DIR/$VERSION_JSON_FILE" ]; then
+    files+=("$VERSION_JSON_FILE")
+  fi
+  if [ -f "$APP_DIR/.env.example" ] && [ -n "$ENV_VERSION_KEY" ]; then
+    files+=(".env.example")
+  fi
+
+  log_step "Committing version files in $APP_DIR ..."
+  git -C "$APP_DIR" add "${files[@]}"
+
+  if git -C "$APP_DIR" diff --cached --quiet; then
+    log_warn "Nothing to commit — version files unchanged."
+    return 0
+  fi
+
+  git -C "$APP_DIR" commit -m "$msg"
+  log_info "Committed: $msg"
+}
+
 print_summary() {
   echo ""
   log_info "=== ${APP_LABEL} — Release version summary ==="
@@ -306,12 +329,16 @@ print_summary() {
   else
     log_info "Updated: VERSION, $VERSION_JSON_FILE"
     [ "$CREATE_TAG" = true ] && log_info "Git tag: v${NEW_VERSION}"
-    echo ""
-    log_step "Suggested commit:"
-    echo "  git add VERSION $VERSION_JSON_FILE .env.example"
-    echo "  git commit -m \"chore(${APP_SLUG}): release v${NEW_VERSION}\""
+    if [ "${AUTO_COMMIT:-false}" = true ]; then
+      log_info "Version files committed automatically (--yes)."
+    else
+      echo ""
+      log_step "Suggested commit:"
+      echo "  git -C \"$APP_DIR\" add VERSION $VERSION_JSON_FILE .env.example"
+      echo "  git -C \"$APP_DIR\" commit -m \"chore(${APP_SLUG}): release v${NEW_VERSION}\""
+    fi
     if [ "$CREATE_TAG" = true ]; then
-      echo "  git push && git push origin v${NEW_VERSION}"
+      echo "  git -C \"$APP_DIR\" push && git -C \"$APP_DIR\" push origin v${NEW_VERSION}"
     fi
   fi
 }
@@ -322,13 +349,15 @@ parse_bump_args() {
   ALLOW_DIRTY=false
   FORCE_LEVEL=""
   AUTO_YES=false
+  AUTO_COMMIT=false
 
   while [ $# -gt 0 ]; do
     case "$1" in
       --dry-run) DRY_RUN=true ;;
       --no-tag) CREATE_TAG=false ;;
       --allow-dirty) ALLOW_DIRTY=true ;;
-      --yes|-y) AUTO_YES=true ;;
+      --yes|-y) AUTO_YES=true; AUTO_COMMIT=true ;;
+      --no-commit) AUTO_COMMIT=false ;;
       --major) FORCE_LEVEL=major ;;
       --minor) FORCE_LEVEL=minor ;;
       --patch) FORCE_LEVEL=patch ;;
@@ -353,7 +382,8 @@ Options:
   --dry-run       Show analysis only, do not write files or tags
   --no-tag        Update version files without creating a git tag
   --allow-dirty   Allow bump with uncommitted changes (tag still requires clean tree)
-  --yes, -y       Skip confirmation prompt
+  --yes, -y       Skip confirmation; auto-commit version files after bump
+  --no-commit     With --yes, skip automatic git commit of version files
   --major         Force MAJOR bump
   --minor         Force MINOR bump
   --patch         Force PATCH bump
@@ -416,8 +446,14 @@ EOF
 
   write_version_files "$NEW_VERSION"
 
+  if [ "$AUTO_COMMIT" = true ]; then
+    commit_version_files
+  fi
+
   if [ "$CREATE_TAG" = true ]; then
-    if [ "$GIT_DIRTY" = true ]; then
+    local porcelain_after
+    porcelain_after="$(git -C "$APP_DIR" status --porcelain 2>/dev/null || true)"
+    if [ -n "$porcelain_after" ]; then
       log_warn "Skipping git tag (dirty tree). Commit first, then: git tag -a v${NEW_VERSION}"
     else
       if git -C "$APP_DIR" rev-parse "v${NEW_VERSION}" >/dev/null 2>&1; then
