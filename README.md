@@ -21,6 +21,10 @@ cd d:/bussiness-work/daizima
 # فقط backend
 
 ./deploy/deploy-from-local.sh backend
+
+# هر دو با هم
+
+./deploy/deploy-from-local.sh all
 ```
 # هر دو
 ./deploy/deploy-from-local.sh all
