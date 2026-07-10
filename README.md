@@ -64,6 +64,14 @@ cd daizima-backend
 
 ```
 echo yes | ./scripts/sync-production-db.sh root@212.23.201.113:15726 /var/www/daizima-backend
+
+# یا بدون نیاز به pipe:
+
+./scripts/sync-production-db.sh -y root@212.23.201.113:15726 /var/www/daizima-backend
+
+# فقط دانلود دامپ (بدون سینک با دیتابیس لوکال) — فایل در DB-DUMPs ذخیره می‌شود:
+
+./scripts/sync-production-db.sh --download-only root@212.23.201.113:15726 /var/www/daizima-backend
 ```
 
 
