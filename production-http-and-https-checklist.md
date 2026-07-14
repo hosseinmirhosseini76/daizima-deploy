@@ -55,6 +55,22 @@ cd /var/www/daizima-frontend
 nginx -t && systemctl reload nginx
 ```
 
+#### ۱.۳.۱ API ترب (الزامی)
+
+برای اتصال ترب، Nginx باید این سه مورد را داشته باشد:
+
+1. **`listen 80`** با `return 301 https://$host$request_uri;` — بدون آن درخواست `http://` timeout می‌گیرد.
+2. **`location /torob_api/`** → Laravel (`127.0.0.1:8100`)
+3. **`location /torob/`** → Laravel (Order Tracking)
+
+فایل مرجع: `daizima-backend/deployment/nginx/frontend-production-https.conf`  
+راهنمای کامل: `daizima-backend/docs/Torob/PRODUCTION_TROUBLESHOOTING.md`
+
+```bash
+curl -sS "https://daizima.com/torob_api/v3/products"   # باید 200
+curl -sS -o /dev/null -w "%{http_code}\n" "http://daizima.com/torob_api/v3/products"  # باید 301
+```
+
 ### ۱.۴ تست
 
 ```bash

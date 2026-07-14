@@ -84,6 +84,10 @@ cd daizima-backend
 docker exec -it daizima-db mysql -u daizima_user -pdaizima_password daizima
 ```
 
+## API ترب
+
+راهنمای production و رفع خطا: `daizima-backend/docs/Torob/PRODUCTION_TROUBLESHOOTING.md`
+
 For Deploying BackEnd:
 
 cd /var/www/daizima-backend
