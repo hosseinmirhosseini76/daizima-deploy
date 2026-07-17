@@ -61,6 +61,7 @@ nginx -t && systemctl reload nginx
 
 1. **`listen 80`** با `return 301 https://$host$request_uri;` — بدون آن درخواست `http://` timeout می‌گیرد.
 2. **`location /torob_api/`** → Laravel (`127.0.0.1:8100`)
+2b. **`location = /list`** و **`location /emalls/`** → Laravel (`127.0.0.1:8100`) — فید ایمالز
 3. **`location /torob/`** → Laravel (Order Tracking)
 
 فایل مرجع: `daizima-backend/deployment/nginx/frontend-production-https.conf`  
