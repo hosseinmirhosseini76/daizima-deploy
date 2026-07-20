@@ -8,6 +8,7 @@
 #   ./deploy/deploy-from-local.sh frontend --skip-pull
 #   ./deploy/deploy-from-local.sh frontend --skip-build
 #   ./deploy/deploy-from-local.sh backend --skip-pull
+#   ./deploy/deploy-from-local.sh backend --with-storage   # also upload storage/app + storage/import
 
 set -e
 
@@ -48,24 +49,30 @@ source "$CONFIG_FILE"
 TARGET="${1:-all}"
 SKIP_PULL=false
 SKIP_BUILD=false
+WITH_STORAGE=false
 
 for arg in "$@"; do
   case "$arg" in
     --skip-pull) SKIP_PULL=true ;;
     --skip-build) SKIP_BUILD=true ;;
+    --with-storage) WITH_STORAGE=true ;;
   esac
 done
 
-if [ "$1" = "--skip-pull" ] || [ "$1" = "--skip-build" ]; then
-  TARGET="${2:-all}"
-fi
+case "$1" in
+  --skip-pull|--skip-build|--with-storage)
+    TARGET="${2:-all}"
+    ;;
+esac
 
-SSH_BASE=(ssh -p "$DEPLOY_PORT" -o StrictHostKeyChecking=accept-new)
-SCP_BASE=(scp -P "$DEPLOY_PORT" -o StrictHostKeyChecking=accept-new)
+# Keepalive reduces mid-transfer "lost connection" on unstable links.
+SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o TCPKeepAlive=yes)
+SSH_BASE=(ssh -p "$DEPLOY_PORT" "${SSH_OPTS[@]}")
+SCP_BASE=(scp -P "$DEPLOY_PORT" "${SSH_OPTS[@]}")
 
 if [ -n "${DEPLOY_PASSWORD:-}" ] && command -v sshpass >/dev/null 2>&1; then
-  SSH_BASE=(sshpass -p "$DEPLOY_PASSWORD" ssh -p "$DEPLOY_PORT" -o StrictHostKeyChecking=accept-new)
-  SCP_BASE=(sshpass -p "$DEPLOY_PASSWORD" scp -P "$DEPLOY_PORT" -o StrictHostKeyChecking=accept-new)
+  SSH_BASE=(sshpass -p "$DEPLOY_PASSWORD" ssh -p "$DEPLOY_PORT" "${SSH_OPTS[@]}")
+  SCP_BASE=(sshpass -p "$DEPLOY_PASSWORD" scp -P "$DEPLOY_PORT" "${SSH_OPTS[@]}")
 elif [ -n "${DEPLOY_PASSWORD:-}" ]; then
   log_warn "sshpass not found. Install it or use SSH keys; you may be prompted for password."
 fi
@@ -177,15 +184,26 @@ deploy_backend() {
   fi
 
   ARCHIVE="/tmp/daizima-backend-$(date +%Y%m%d_%H%M%S).tar.gz"
-  log_info "Creating source archive..."
+  TAR_EXCLUDES=(
+    --exclude='.git'
+    --exclude='.env'
+    --exclude='vendor'
+    --exclude='node_modules'
+    --exclude='storage/logs'
+    --exclude='storage/framework/cache'
+    --exclude='storage/framework/sessions'
+    --exclude='storage/framework/views'
+    --exclude='bootstrap/cache/*.php'
+  )
+  if [ "$WITH_STORAGE" = true ]; then
+    log_warn "Including storage/app and storage/import (large upload; may overwrite server media)."
+    log_info "Creating source archive..."
+  else
+    log_info "Creating source archive (excluding local media/storage; use --with-storage to include)..."
+    TAR_EXCLUDES+=(--exclude='storage/app' --exclude='storage/import')
+  fi
   tar -czf "$ARCHIVE" \
-    --exclude='.git' \
-    --exclude='.env' \
-    --exclude='vendor' \
-    --exclude='node_modules' \
-    --exclude='storage/logs' \
-    --exclude='storage/framework/cache/data' \
-    --exclude='bootstrap/cache/*.php' \
+    "${TAR_EXCLUDES[@]}" \
     -C "$ROOT_DIR/daizima-backend" .
 
   ARCHIVE_SIZE="$(du -h "$ARCHIVE" | cut -f1)"
@@ -218,7 +236,7 @@ case "$TARGET" in
     deploy_frontend
     ;;
   *)
-    echo "Usage: $0 [frontend|backend|all] [--skip-pull] [--skip-build]"
+    echo "Usage: $0 [frontend|backend|all] [--skip-pull] [--skip-build] [--with-storage]"
     exit 1
     ;;
 esac

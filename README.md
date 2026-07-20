@@ -27,6 +27,8 @@ cd d:/bussiness-work/daizima
 
 ./deploy/deploy-from-local.sh backend
 
+./deploy/deploy-from-local.sh backend --with-storage
+
 # هر دو با هم
 
 ./deploy/deploy-from-local.sh all
@@ -83,6 +85,8 @@ cd daizima-backend
 ```
 docker exec -it daizima-db mysql -u daizima_user -pdaizima_password daizima
 ```
+
+
 
 ## API ترب
 
