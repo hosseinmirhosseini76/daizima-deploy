@@ -25,6 +25,8 @@ cd d:/bussiness-work/daizima
 
 # فقط backend
 
+./deploy/deploy-from-local.sh backend --skip-pull
+
 ./deploy/deploy-from-local.sh backend
 
 ./deploy/deploy-from-local.sh backend --with-storage
