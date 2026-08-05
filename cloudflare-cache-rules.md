@@ -1,84 +1,83 @@
 # Cloudflare Cache Rules — Daizima
 
 > **دامنه:** `daizima.com` (پشت Cloudflare orange-cloud)  
-> **هدف:** کاهش TTFB و bandwidth برای assets ثابت، بدون stale شدن HTML/API
+> **هدف:** کاهش TTFB و bandwidth برای assets ثابت و APIهای عمومی
 
 ---
 
-## پیشنهاد Cache Rules (Dashboard → Rules → Cache Rules)
+## Rule — Product / media storage (اولویت بالا برای سرعت عکس)
 
-### Rule 1 — Hashed Nuxt assets (اولویت بالا)
+| Field | Value |
+|-------|--------|
+| **Name** | `Storage media cache` |
+| **If (Edit expression)** | ببین پایین |
+| **Then** | Cache eligibility: **Eligible for cache** |
+| **Edge TTL** | Ignore cache-control → **30 days** (یا 1 year) |
+| **Browser TTL** | Respect origin / 30 days |
+| **Cache key** | Include query string = OFF کافی است (معمولاً query ندارند) |
+| **Headers custom** | هیچ — `custom-header` نگذار |
+
+```txt
+(http.request.method eq "GET" and starts_with(http.request.uri.path, "/storage/"))
+```
+
+**تست (GET نه HEAD):**
+
+```bash
+curl -sD - -o /dev/null "https://daizima.com/storage/product_images/SOME.jpg" | grep -i cf-cache
+curl -sD - -o /dev/null "https://daizima.com/storage/product_images/SOME.jpg" | grep -i cf-cache
+# انتظار: MISS سپس HIT
+```
+
+---
+
+## Rule — API locations Tipax/Tapin (انجام‌شده)
+
+Expression با `GET` برای `/api/v1/tipax/*` locations، `/api/v1/tapin/*` locations، `/api/v1/locations/*`، shipping-*.
+
+---
+
+## Rule — API homepage / catalog (انجام‌شده)
+
+`/api/v2/homepage-sections*`, `/api/v2/categories*`, `/api/v1/brands*`, `/api/v1/products` (GET).
+
+**نکته:** `/api/v1/categories` legacy است و فعلاً ۵۰۰ می‌دهد — کش نمی‌شود.
+
+---
+
+## Rule — Hashed Nuxt assets
 
 | Field | Value |
 |-------|--------|
 | **If** | URI Path starts with `/_nuxt/` |
-| **Then** | Cache eligibility: Eligible for cache |
-| **Edge TTL** | Ignore cache-control → **1 year** |
+| **Then** | Eligible for cache |
+| **Edge TTL** | **1 year** |
 | **Browser TTL** | Respect origin |
 
-**دلیل:** فایل‌های hash شده immutable هستند؛ deploy جدید = نام فایل جدید.
+---
+
+## Rule — Bypass (خصوصی)
+
+Bypass برای: `/api/v1/tipax/check-price`, `/api/v1/tapin/check-price`, `/api/*/cart*`, `/api/*/checkout*`, `/api/*/auth*`, `/api/*/payments*`, `/api/*/admin*`, `/panel/`, `/checkout/`, `/cart`.
+
+> دیگر کل `/api/` را Bypass نکن — با Ruleهای کش عمومی تداخل دارد. Bypassها را **بالاتر** از cache rules بگذار.
 
 ---
 
-### Rule 2 — Static public assets
+## Brotli
 
-| Field | Value |
-|-------|--------|
-| **If** | URI Path matches `*.woff2`, `*.webp`, `*.svg`, `/fonts/*`, `/images/*` |
-| **Then** | Edge TTL: **30 days** |
+Dashboard → **Speed** → **Optimization**: Brotli ✅
 
 ---
 
-### Rule 3 — HTML homepage (اختیاری — با Nitro SWR هماهنگ)
+## Origin nginx
 
-| Field | Value |
-|-------|--------|
-| **If** | URI Path equals `/` |
-| **Then** | Edge TTL: **60 seconds** (یا Respect origin) |
+روی سرور بعد از دیپلوی conf:
 
-**نکته:** اگر Nitro `swr: 60` فعال است، origin خودش HTML تازه می‌دهد؛ Cloudflare می‌تواند `Respect origin headers` باشد.
-
----
-
-### Rule 4 — Bypass cache (هرگز cache نشوند)
-
-| Field | Value |
-|-------|--------|
-| **If** | URI Path starts with `/api/`, `/panel/`, `/user-panel/`, `/checkout/`, `/cart` |
-| **Then** | Cache eligibility: **Bypass cache** |
-
----
-
-### Rule 5 — Service Worker (PWA)
-
-| Field | Value |
-|-------|--------|
-| **If** | URI Path is `/sw.js`, `/workbox-*.js`, `/manifest.webmanifest` |
-| **Then** | Bypass cache یا Edge TTL: **0** |
-
----
-
-## Page Rules قدیمی (اگر Cache Rules در دسترس نیست)
-
-```
-/_nuxt/*     → Cache Level: Cache Everything, Edge TTL: 1 month
-/api/*       → Cache Level: Bypass
-/sw.js       → Cache Level: Bypass
+```bash
+# از repo
+sudo cp /var/www/daizima-backend/deployment/nginx/frontend-production-https.conf /etc/nginx/sites-available/daizima-frontend
+nginx -t && systemctl reload nginx
 ```
 
----
-
-## Brotli در Cloudflare
-
-Dashboard → **Speed** → **Optimization**:
-
-- ✅ Brotli
-- ✅ Auto Minify: **فقط HTML** (JS/CSS را minify نکن — origin قبلاً minify کرده)
-
----
-
-## بعد از deploy
-
-1. DevTools → Network → response header `cf-cache-status` برای `/_nuxt/*.js`
-2. انتظار: `HIT` بعد از اولین request
-3. HTML `/` → `DYNAMIC` یا `MISS` با TTL کوتاه
+`/storage/` باید `Cache-Control: public, max-age=2592000, immutable` بدهد.

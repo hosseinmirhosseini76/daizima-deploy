@@ -1,18 +1,6 @@
-# daizima-deploy
+# Daizima Deploy
 
-۱. نصب sshpass (یک‌بار — برای اتوماتیک شدن SSH)
-روی Windows با Git Bash:
-
-# اگر choco دارید:
-
-choco install sshpass
-
-# یا SSH key بسازید (بهتر و امن‌تر):
-
-ssh-keygen -t ed25519
-ssh-copy-id -p 15726 [root@212.23.201.113](mailto:root@212.23.201.113)
-
-# بعد DEPLOY_PASSWORD را از deploy.local.env خالی کنید
+## بعد DEPLOY_PASSWORD را از deploy.local.env خالی کنید
 
 ۲. Deploy
 
@@ -36,9 +24,31 @@ cd d:/bussiness-work/daizima
 ./deploy/deploy-from-local.sh all
 ```
 
-# هر دو
 
-./deploy/deploy-from-local.sh all
+
+# خلاصه کندی‌های روزانه (روی سرور، داخل بک‌اند):
+
+```
+cd /var/www/daizima-backend
+bash scripts/summarize-perf.sh
+# یا: DATE=2026-08-03 bash scripts/summarize-perf.sh
+```
+
+# کش تصاویر /storage در Cloudflare + بهینه‌سازی WebP:
+
+راهنما: `deploy/cloudflare-cache-rules.md` (Rule: Storage media cache)
+
+روی سرور بعد از دیپلوی backend (نیاز به GD با JPEG/WebP — Dockerfile به‌روز شده):
+
+```
+cd /var/www/daizima-backend
+docker compose exec app php artisan media:optimize-images --path=product_images
+# سایر پوشه‌ها در صورت نیاز:
+# docker compose exec app php artisan media:optimize-images --path=brand_images
+# docker compose exec app php artisan media:optimize-images --path=homepage_images
+```
+
+بعد از آپدیت nginx conf: `nginx -t && systemctl reload nginx`
 
 # اگر کد را قبلاً pull کردید:
 

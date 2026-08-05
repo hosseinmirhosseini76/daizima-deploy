@@ -31,6 +31,40 @@ log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
+# MSYS_NO_PATHCONV=1 breaks the Unix pnpm shim on Windows (node resolves /c/... as G:\c\...).
+# Prefer pnpm.cmd there; fall back to pnpm elsewhere.
+resolve_pnpm() {
+  if [ -n "${MSYSTEM:-}" ] || [ -n "${WINDIR:-}" ]; then
+    if command -v pnpm.cmd >/dev/null 2>&1; then
+      echo "pnpm.cmd"
+      return 0
+    fi
+    # nvm4w / system Node often ship pnpm.cmd next to node
+    local node_dir
+    node_dir="$(dirname "$(command -v node 2>/dev/null || true)")"
+    if [ -n "$node_dir" ] && [ -f "$node_dir/pnpm.cmd" ]; then
+      echo "$node_dir/pnpm.cmd"
+      return 0
+    fi
+  fi
+
+  if command -v pnpm >/dev/null 2>&1; then
+    echo "pnpm"
+    return 0
+  fi
+
+  return 1
+}
+
+run_pnpm() {
+  local pnpm_bin
+  if ! pnpm_bin="$(resolve_pnpm)"; then
+    log_error "pnpm not found. Install pnpm or enable it via corepack."
+    exit 1
+  fi
+  "$pnpm_bin" "$@"
+}
+
 if [ ! -f "$CONFIG_FILE" ]; then
   log_error "Missing $CONFIG_FILE"
   echo "Copy deploy/deploy.local.env.example to deploy/deploy.local.env and fill in values."
@@ -131,7 +165,7 @@ deploy_frontend() {
 
   if [ "$SKIP_BUILD" = false ]; then
     log_info "Installing dependencies..."
-    pnpm install --frozen-lockfile
+    run_pnpm install --frozen-lockfile
 
     log_info "Building frontend..."
     export NUXT_PUBLIC_API_BASE_URL="${NUXT_PUBLIC_API_BASE_URL:-/api}"
@@ -140,7 +174,7 @@ deploy_frontend() {
     export NUXT_PUBLIC_WEBSOCKET_URL="${NUXT_PUBLIC_WEBSOCKET_URL:-wss://daizima.com/ws}"
     export NUXT_PUBLIC_APP_NAME="${NUXT_PUBLIC_APP_NAME:-Daizima}"
     export NUXT_PUBLIC_APP_ENV="${NUXT_PUBLIC_APP_ENV:-production}"
-    NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
+    NODE_OPTIONS="--max-old-space-size=4096" run_pnpm run build
   fi
 
   if [ ! -d ".output/server" ]; then
