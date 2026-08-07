@@ -9,7 +9,7 @@ cd d:/bussiness-work/daizima
 ```
 # فقط frontend
 
-./deploy/deploy-from-local.sh frontend
+./deploy/deploy-from-local.sh frontend --skip-pull
 
 # فقط backend
 
@@ -23,8 +23,6 @@ cd d:/bussiness-work/daizima
 
 ./deploy/deploy-from-local.sh all
 ```
-
-
 
 # خلاصه کندی‌های روزانه (روی سرور، داخل بک‌اند):
 
