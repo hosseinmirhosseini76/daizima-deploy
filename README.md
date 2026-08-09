@@ -86,7 +86,41 @@ echo yes | ./scripts/sync-production-db.sh root@212.23.201.113:15726 /var/www/da
 ./scripts/sync-production-db.sh --download-only root@212.23.201.113:15726 /var/www/daizima-backend
 ```
 
+# بکاپ دوره‌ای دامپ روی سرور جدا (ویندوز سرور / بدون Docker محلی):
 
+روی ماشین بکاپ فقط Git Bash + کلید SSH لازم است (Docker فقط روی سرور پروداکشن است).
+
+ساختار پیشنهادی روی سرور بکاپ:
+
+```
+parent/
+  daizima-backend/   # clone
+  deploy/            # clone
+  DB-DUMPs/          # خودکار ساخته می‌شود کنار daizima-backend
+```
+
+```
+cd daizima-backend
+
+# یک‌بار تست دستی (بدون -o: دامپ‌ها در ../DB-DUMPs ذخیره می‌شوند):
+./scripts/download-production-db-backup.sh \
+  -i ~/.ssh/daizima_backup \
+  --keep-days 30 \
+  root@212.23.201.113:15726 /var/www/daizima-backend
+```
+
+زمان‌بندی هر ۶ ساعت در Windows Task Scheduler:
+
+- Program: `C:\Program Files\Git\bin\bash.exe`
+- Arguments:
+
+```
+-lc "cd /d/path/to/parent/daizima-backend && ./scripts/download-production-db-backup.sh -i ~/.ssh/daizima_backup --keep-days 30 root@212.23.201.113:15726 /var/www/daizima-backend"
+```
+
+- Trigger: Daily، و سپس Advanced → Repeat every 6 hours
+
+فایل‌های `production-dump-*.sql[.gz]` قدیمی‌تر از `--keep-days` (پیش‌فرض ۳۰ روز) خودکار پاک می‌شوند. به‌صورت پیش‌فرض دامپ فشرده (`.gz`) نگه داشته می‌شود.
 
 # برای دسترسی به دیتابیس روی لوکال:
 
