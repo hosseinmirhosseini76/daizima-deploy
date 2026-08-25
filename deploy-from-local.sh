@@ -100,15 +100,37 @@ case "$1" in
 esac
 
 # Keepalive reduces mid-transfer "lost connection" on unstable links.
-SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o TCPKeepAlive=yes)
+# Prefer SSH key auth (Windows Git Bash has no sshpass → avoid interactive password).
+SSH_OPTS=(
+  -o StrictHostKeyChecking=accept-new
+  -o ServerAliveInterval=30
+  -o ServerAliveCountMax=10
+  -o TCPKeepAlive=yes
+  -o IdentitiesOnly=yes
+  -o PreferredAuthentications=publickey
+  -o BatchMode=yes
+)
+if [ -n "${DEPLOY_SSH_KEY:-}" ]; then
+  SSH_OPTS+=(-i "$DEPLOY_SSH_KEY")
+elif [ -f "${HOME}/.ssh/id_ed25519" ]; then
+  SSH_OPTS+=(-i "${HOME}/.ssh/id_ed25519")
+elif [ -f "${HOME}/.ssh/id_rsa" ]; then
+  SSH_OPTS+=(-i "${HOME}/.ssh/id_rsa")
+fi
+
 SSH_BASE=(ssh -p "$DEPLOY_PORT" "${SSH_OPTS[@]}")
 SCP_BASE=(scp -P "$DEPLOY_PORT" "${SSH_OPTS[@]}")
 
+# Optional password fallback when sshpass is available (Linux/macOS).
 if [ -n "${DEPLOY_PASSWORD:-}" ] && command -v sshpass >/dev/null 2>&1; then
-  SSH_BASE=(sshpass -p "$DEPLOY_PASSWORD" ssh -p "$DEPLOY_PORT" "${SSH_OPTS[@]}")
-  SCP_BASE=(sshpass -p "$DEPLOY_PASSWORD" scp -P "$DEPLOY_PORT" "${SSH_OPTS[@]}")
-elif [ -n "${DEPLOY_PASSWORD:-}" ]; then
-  log_warn "sshpass not found. Install it or use SSH keys; you may be prompted for password."
+  SSH_OPTS_PW=(
+    -o StrictHostKeyChecking=accept-new
+    -o ServerAliveInterval=30
+    -o ServerAliveCountMax=10
+    -o TCPKeepAlive=yes
+  )
+  SSH_BASE=(sshpass -p "$DEPLOY_PASSWORD" ssh -p "$DEPLOY_PORT" "${SSH_OPTS_PW[@]}")
+  SCP_BASE=(sshpass -p "$DEPLOY_PASSWORD" scp -P "$DEPLOY_PORT" "${SSH_OPTS_PW[@]}")
 fi
 
 remote() {

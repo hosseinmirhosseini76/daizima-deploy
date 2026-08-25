@@ -1,10 +1,24 @@
 # Daizima Deploy
 
-## بعد DEPLOY_PASSWORD را از deploy.local.env خالی کنید
+## سرور production
 
-۲. Deploy
 
-cd d:/bussiness-work/daizima
+| تنظیم         | مقدار                       |
+| ------------- | --------------------------- |
+| Host          | `185.18.212.24`             |
+| SSH Port      | `22`                        |
+| User          | `root`                      |
+| Backend path  | `/var/www/daizima-backend`  |
+| Frontend path | `/var/www/daizima-frontend` |
+
+
+اتصال SSH: `ssh root@185.18.212.24`  
+تنظیمات دیپلوی محلی: `deploy/deploy.local.env` (از `deploy.local.env.example` کپی کنید).  
+وقتی احراز هویت با SSH key کار می‌کند، `DEPLOY_PASSWORD` را خالی بگذارید.
+
+## ۱. Deploy
+
+از ریشه monorepo (مثلاً `g:/business/Daizima`):
 
 ```
 # فقط frontend
@@ -24,6 +38,8 @@ cd d:/bussiness-work/daizima
 ./deploy/deploy-from-local.sh all
 ```
 
+
+
 # خلاصه کندی‌های روزانه (روی سرور، داخل بک‌اند):
 
 ```
@@ -31,6 +47,8 @@ cd /var/www/daizima-backend
 bash scripts/summarize-perf.sh
 # یا: DATE=2026-08-03 bash scripts/summarize-perf.sh
 ```
+
+
 
 # کش تصاویر /storage در Cloudflare + بهینه‌سازی WebP:
 
@@ -65,7 +83,7 @@ pm2 status
 ./scripts/sync-production-storage.sh user@server.com /var/www/daizima-backend
 
 
-./scripts/sync-production-storage.sh root@212.23.201.113:15726 /var/www/daizima-backend
+./scripts/sync-production-storage.sh root@185.18.212.24 /var/www/daizima-backend
 ```
 
 
@@ -75,16 +93,18 @@ pm2 status
 cd daizima-backend
 
 ```
-echo yes | ./scripts/sync-production-db.sh root@212.23.201.113:15726 /var/www/daizima-backend
+echo yes | ./scripts/sync-production-db.sh root@185.18.212.24 /var/www/daizima-backend
 
 # یا بدون نیاز به pipe:
 
-./scripts/sync-production-db.sh -y root@212.23.201.113:15726 /var/www/daizima-backend
+./scripts/sync-production-db.sh -y root@185.18.212.24 /var/www/daizima-backend
 
 # فقط دانلود دامپ (بدون سینک با دیتابیس لوکال) — فایل در DB-DUMPs ذخیره می‌شود:
 
-./scripts/sync-production-db.sh --download-only root@212.23.201.113:15726 /var/www/daizima-backend
+./scripts/sync-production-db.sh --download-only root@185.18.212.24 /var/www/daizima-backend
 ```
+
+
 
 # بکاپ دوره‌ای دامپ روی سرور جدا (ویندوز سرور / بدون Docker محلی):
 
@@ -106,7 +126,7 @@ cd daizima-backend
 ./scripts/download-production-db-backup.sh \
   -i ~/.ssh/daizima_backup \
   --keep-days 30 \
-  root@212.23.201.113:15726 /var/www/daizima-backend
+  root@185.18.212.24 /var/www/daizima-backend
 ```
 
 زمان‌بندی هر ۶ ساعت در Windows Task Scheduler:
@@ -115,7 +135,7 @@ cd daizima-backend
 - Arguments:
 
 ```
--lc "cd /d/path/to/parent/daizima-backend && ./scripts/download-production-db-backup.sh -i ~/.ssh/daizima_backup --keep-days 30 root@212.23.201.113:15726 /var/www/daizima-backend"
+-lc "cd /d/path/to/parent/daizima-backend && ./scripts/download-production-db-backup.sh -i ~/.ssh/daizima_backup --keep-days 30 root@185.18.212.24 /var/www/daizima-backend"
 ```
 
 - Trigger: Daily، و سپس Advanced → Repeat every 6 hours
