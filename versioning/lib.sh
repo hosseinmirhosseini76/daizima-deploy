@@ -278,6 +278,20 @@ write_version_files() {
       echo "${ENV_VERSION_KEY}=${new_version}" >> "$APP_DIR/.env.example"
     fi
   fi
+
+  if [ -n "${APP_VERSION_CONST_FILE:-}" ]; then
+    local const_file="$APP_DIR/$APP_VERSION_CONST_FILE"
+    if [ ! -f "$const_file" ]; then
+      log_error "APP_VERSION file not found: $APP_VERSION_CONST_FILE"
+      exit 1
+    fi
+    if ! grep -q "const APP_VERSION = '" "$const_file"; then
+      log_error "const APP_VERSION not found in $APP_VERSION_CONST_FILE"
+      exit 1
+    fi
+    sed -i.bak "s/const APP_VERSION = '[0-9]*\.[0-9]*\.[0-9]*'/const APP_VERSION = '${new_version}'/" "$const_file"
+    rm -f "${const_file}.bak"
+  fi
 }
 
 create_annotated_tag() {
@@ -301,6 +315,9 @@ commit_version_files() {
   fi
   if [ -f "$APP_DIR/.env.example" ] && [ -n "$ENV_VERSION_KEY" ]; then
     files+=(".env.example")
+  fi
+  if [ -n "${APP_VERSION_CONST_FILE:-}" ] && [ -f "$APP_DIR/$APP_VERSION_CONST_FILE" ]; then
+    files+=("$APP_VERSION_CONST_FILE")
   fi
 
   log_step "Committing version files in $APP_DIR ..."
@@ -327,14 +344,14 @@ print_summary() {
   if [ "$DRY_RUN" = true ]; then
     log_warn "Dry run — no files or tags were changed."
   else
-    log_info "Updated: VERSION, $VERSION_JSON_FILE"
+    log_info "Updated: VERSION, $VERSION_JSON_FILE${APP_VERSION_CONST_FILE:+, $APP_VERSION_CONST_FILE}"
     [ "$CREATE_TAG" = true ] && log_info "Git tag: v${NEW_VERSION}"
     if [ "${AUTO_COMMIT:-false}" = true ]; then
       log_info "Version files committed automatically (--yes)."
     else
       echo ""
       log_step "Suggested commit:"
-      echo "  git -C \"$APP_DIR\" add VERSION $VERSION_JSON_FILE .env.example"
+      echo "  git -C \"$APP_DIR\" add VERSION $VERSION_JSON_FILE .env.example ${APP_VERSION_CONST_FILE:-}"
       echo "  git -C \"$APP_DIR\" commit -m \"chore(${APP_SLUG}): release v${NEW_VERSION}\""
     fi
     if [ "$CREATE_TAG" = true ]; then

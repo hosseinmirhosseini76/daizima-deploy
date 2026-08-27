@@ -120,7 +120,7 @@ git add -A && git commit -m "feat: ..."
 | `VERSION` | منبع ساده یک‌خطی |
 | `package.json` → `version` | هماهنگ با SemVer |
 | `.env.example` → `NUXT_PUBLIC_APP_VERSION` | نمونه env |
-| `nuxt.config.ts` → `runtimeConfig.public.appVersion` | در build و کلاینت |
+| `app/app.vue` → `APP_VERSION` | نسخه نمایش‌داده‌شده کنار لوگو |
 
 > روی سرور production مقدار `APP_VERSION` / `NUXT_PUBLIC_APP_VERSION` را در `.env` واقعی ست کنید (اسکریپت `.env` محلی را عمداً دست نمی‌زند).
 

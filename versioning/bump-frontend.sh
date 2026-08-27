@@ -10,6 +10,7 @@
 #   - daizima-frontend/VERSION
 #   - daizima-frontend/package.json (version)
 #   - daizima-frontend/.env.example (NUXT_PUBLIC_APP_VERSION=)
+#   - daizima-frontend/app/app.vue (const APP_VERSION)
 
 set -euo pipefail
 
@@ -22,5 +23,6 @@ APP_SLUG="frontend"
 APP_DIR="${MONOREPO_ROOT}/daizima-frontend"
 VERSION_JSON_FILE="package.json"
 ENV_VERSION_KEY="NUXT_PUBLIC_APP_VERSION"
+APP_VERSION_CONST_FILE="app/app.vue"
 
 run_bump_workflow "$@"
