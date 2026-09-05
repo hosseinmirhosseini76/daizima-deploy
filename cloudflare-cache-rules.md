@@ -7,7 +7,19 @@
 
 ---
 
-## وضعیت فعلی (۲۰۲۶-۰۸-۲۷) — علت کندی پیشنهاد ویژه
+## اعمال‌شده روی Cloudflare (۲۰۲۶-۰۸-۲۷)
+
+- **Bypass special offer products** اضافه شد (آخرین قانونِ منطبق برای این URLها برنده است).
+- **API Products Cache** و **API homepage catalog cache**: `special_offer` از expression حذف شد؛ Edge TTL = **Respect origin**.
+- **Homepage Cache**: Browser TTL = Respect origin (دیگر ۱ سال نیست).
+- Zone **Browser Cache TTL** از ۱ سال به **Respect Existing Headers (0)** تغییر کرد.
+- کل کش zone **purge** شد.
+
+تأیید پروداکشن: `/api/v1/products?special_offer=true` حالا `cf-cache-status: DYNAMIC` است (دیگر HIT با Age نیست).
+
+---
+
+## وضعیت قبلی (علت کندی پیشنهاد ویژه)
 
 روی پروداکشن اندازه‌گیری شد:
 
