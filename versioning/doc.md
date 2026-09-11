@@ -16,7 +16,7 @@ deploy/versioning/
 └── bump-frontend.sh    ← فرانت‌اند (Nuxt)
 ```
 
-هر اپ (`daizima-backend` و `daizima-frontend`) **ریپوی git جدا** دارد؛ تگ‌ها مستقل هستند (مثلاً هر دو `v1.2.0` ولی در ریپوی خودشان).
+هر اپ (`daizima-backend` و `daizima-frontend-new`) **ریپوی git جدا** دارد؛ تگ‌ها مستقل هستند (مثلاً هر دو `v1.2.0` ولی در ریپوی خودشان).
 
 ---
 
@@ -76,7 +76,7 @@ git add -A && git commit -m "feat: ..."
 ./deploy/versioning/bump-backend.sh --no-tag --yes
 ./deploy/versioning/bump-frontend.sh --no-tag --yes
 
-با `--yes` فایل‌های ورژن بعد از bump **خودکار commit** می‌شوند (`chore(backend|frontend): release vX.Y.Z`).
+با `--yes` فایل‌های ورژن بعد از bump **خودکار commit** می‌شوند (`chore(backend|storefront): release vX.Y.Z`).
 برای غیرفعال کردن commit خودکار: `--yes --no-commit`.
 
 ./deploy/versioning/bump-backend.sh --minor --yes
@@ -113,14 +113,14 @@ git add -A && git commit -m "feat: ..."
 | `.env.example` → `APP_VERSION` | نمونه env |
 | `config/app.php` → `version` | `config('app.version')` در runtime |
 
-### Frontend (`daizima-frontend`)
+### Frontend / Storefront (`daizima-frontend-new`)
 
 | فایل | نقش |
 |------|-----|
 | `VERSION` | منبع ساده یک‌خطی |
-| `package.json` → `version` | هماهنگ با SemVer |
+| `apps/storefront/package.json` → `version` | هماهنگ با SemVer |
 | `.env.example` → `NUXT_PUBLIC_APP_VERSION` | نمونه env |
-| `app/app.vue` → `APP_VERSION` | نسخه نمایش‌داده‌شده کنار لوگو |
+| `apps/storefront/app/app.vue` → `APP_VERSION` | نسخه نمایش‌داده‌شده کنار لوگو |
 
 > روی سرور production مقدار `APP_VERSION` / `NUXT_PUBLIC_APP_VERSION` را در `.env` واقعی ست کنید (اسکریپت `.env` محلی را عمداً دست نمی‌زند).
 
@@ -131,7 +131,7 @@ git add -A && git commit -m "feat: ..."
 ```bash
 # ۱. commit تغییرات در هر ریپو
 cd daizima-backend && git add -A && git commit -m "feat: ..."
-cd ../daizima-frontend && git add -A && git commit -m "feat: ..."
+cd ../daizima-frontend-new && git add -A && git commit -m "feat: ..."
 
 # ۲. bump ورژن (از ریشه monorepo)
 cd ..
@@ -140,7 +140,7 @@ cd ..
 
 # ۳. push (اگر با --yes اجرا کردید، commit ورژن خودکار انجام شده)
 cd daizima-backend && git push
-cd ../daizima-frontend && git push
+cd ../daizima-frontend-new && git push
 ./deploy/deploy-from-local.sh all
 ```
 
@@ -164,7 +164,7 @@ cd ../daizima-frontend && git push
 | `Working tree is dirty` | commit کنید یا `--allow-dirty` / `--dry-run` |
 | `Tag vX.Y.Z already exists` | ورژه بالاتر بزنید یا تگ قدیمی را حذف/تغییر نام دهید |
 | `Need php or node` | یکی از آن‌ها را نصب کنید |
-| `Not a git repository` | از داخل `daizima-backend` یا `daizima-frontend` که `.git` دارد اطمینان حاصل کنید |
+| `Not a git repository` | از داخل `daizima-backend` یا `daizima-frontend-new` که `.git` دارد اطمینان حاصل کنید |
 | پیشنهاد همیشه `patch` است | commit messageها را با `feat:` / `fix:` بنویسید |
 
 ---

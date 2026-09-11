@@ -10,11 +10,24 @@
 | User          | `root`                      |
 | Backend path  | `/var/www/daizima-backend`  |
 | Frontend path | `/var/www/daizima-frontend` |
+| New FE path   | `/var/www/daizima-frontend-new` (storefront / admin / user) |
 
+
+فرانت جدید **فقط از GitHub Actions** دیپلوی می‌شود (`daizima-frontend-new` → Deploy apps). پوش روی `main` آن را بالا نمی‌آورد. راهنما: [`daizima-frontend-new/docs/GITHUB_DEPLOY.md`](../daizima-frontend-new/docs/GITHUB_DEPLOY.md). اسکریپت `deploy-from-local.sh frontend` هنوز فرانت **قدیمی** (`:3000`) را می‌فرستد.
 
 اتصال SSH: `ssh root@185.18.212.24`  
 تنظیمات دیپلوی محلی: `deploy/deploy.local.env` (از `deploy.local.env.example` کپی کنید).  
 وقتی احراز هویت با SSH key کار می‌کند، `DEPLOY_PASSWORD` را خالی بگذارید.
+
+## Multi-app domains
+
+جزئیات: [`MULTI_APP.md`](MULTI_APP.md) — nginx: [`_remote-nginx-multi-app.conf`](_remote-nginx-multi-app.conf)
+
+| دامنه | اپ | پورت |
+|-------|-----|------|
+| `daizima.com` | storefront | `3021` |
+| `admin.daizima.com` | admin | `3022` |
+| `user.daizima.com` | user | `3023` |
 
 ## ۱. Deploy
 

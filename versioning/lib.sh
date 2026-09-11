@@ -61,8 +61,10 @@ git_require_repo() {
 }
 
 git_status_report() {
-  local porcelain
-  porcelain="$(git -C "$APP_DIR" status --porcelain 2>/dev/null || true)"
+  local porcelain pathspec
+  pathspec="$(git_pathspec_args)"
+  # shellcheck disable=SC2086
+  porcelain="$(git -C "$APP_DIR" status --porcelain $pathspec 2>/dev/null || true)"
   if [ -z "$porcelain" ]; then
     log_info "Git working tree: clean"
     GIT_DIRTY=false
@@ -98,23 +100,35 @@ git_range_for_analysis() {
   fi
 }
 
+# Optional path filter (e.g. apps/storefront) so analysis stays on one app.
+git_pathspec_args() {
+  if [ -n "${GIT_PATHSPEC:-}" ]; then
+    echo "-- $GIT_PATHSPEC"
+  fi
+}
+
 # Returns suggested level: major | minor | patch | none
 analyze_bump_level() {
   local level="patch"
   local has_changes=false
   local commit_count=0
 
+  local pathspec
+  pathspec="$(git_pathspec_args)"
+
   if [ -n "${LAST_TAG:-}" ]; then
     if ! git -C "$APP_DIR" rev-parse "$LAST_TAG" >/dev/null 2>&1; then
       GIT_RANGE="HEAD"
-    elif [ -z "$(git -C "$APP_DIR" log "$GIT_RANGE" --oneline 2>/dev/null)" ]; then
+    # shellcheck disable=SC2086
+    elif [ -z "$(git -C "$APP_DIR" log "$GIT_RANGE" --oneline $pathspec 2>/dev/null)" ]; then
       echo "none"
       return 0
     fi
   fi
 
   local commits
-  commits="$(git -C "$APP_DIR" log "$GIT_RANGE" --pretty=format:%s 2>/dev/null || true)"
+  # shellcheck disable=SC2086
+  commits="$(git -C "$APP_DIR" log "$GIT_RANGE" --pretty=format:%s $pathspec 2>/dev/null || true)"
   if [ -n "$commits" ]; then
     has_changes=true
     commit_count=$(echo "$commits" | grep -c . || echo 0)
@@ -122,9 +136,11 @@ analyze_bump_level() {
 
   local diff_files
   if [ -n "${LAST_TAG:-}" ] && git -C "$APP_DIR" rev-parse "$LAST_TAG" >/dev/null 2>&1; then
-    diff_files="$(git -C "$APP_DIR" diff --name-only "$LAST_TAG..HEAD" 2>/dev/null || true)"
+    # shellcheck disable=SC2086
+    diff_files="$(git -C "$APP_DIR" diff --name-only "$LAST_TAG..HEAD" $pathspec 2>/dev/null || true)"
   else
-    diff_files="$(git -C "$APP_DIR" diff --name-only HEAD 2>/dev/null || true)"
+    # shellcheck disable=SC2086
+    diff_files="$(git -C "$APP_DIR" diff --name-only HEAD $pathspec 2>/dev/null || true)"
   fi
 
   if [ -z "$commits" ] && [ -z "$diff_files" ] && [ "$GIT_DIRTY" != true ]; then
@@ -183,7 +199,7 @@ analyze_bump_level() {
         return 0
       fi
     fi
-    if echo "$diff_files" | grep -qE '^app/pages/[^/]+/index\.vue$|^app/pages/[^/]+\.vue$'; then
+    if echo "$diff_files" | grep -qE '(^|/)app/pages/[^/]+/index\.vue$|(^|/)app/pages/[^/]+\.vue$'; then
       echo "minor"
       return 0
     fi
