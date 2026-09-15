@@ -1,5 +1,17 @@
 # Daizima Deploy
 
+## Immediate Commands
+```
+./scripts/sync-production-storage.sh root@185.18.212.24 /var/www/daizima-backend
+./scripts/sync-production-db.sh -y root@185.18.212.24 /var/www/daizima-backend
+./scripts/sync-production-db.sh --download-only root@185.18.212.24 /var/www/daizima-backend
+```
+
+## Fast Backend Deploy
+```
+./deploy/deploy-from-local.sh backend --skip-pull
+```
+
 ## سرور production
 
 
@@ -13,7 +25,7 @@
 | New FE path   | `/var/www/daizima-frontend-new` (storefront / admin / user) |
 
 
-فرانت جدید **فقط از GitHub Actions** دیپلوی می‌شود (`daizima-frontend-new` → Deploy apps). پوش روی `main` آن را بالا نمی‌آورد. راهنما: [`daizima-frontend-new/docs/GITHUB_DEPLOY.md`](../daizima-frontend-new/docs/GITHUB_DEPLOY.md). اسکریپت `deploy-from-local.sh frontend` هنوز فرانت **قدیمی** (`:3000`) را می‌فرستد.
+فرانت جدید **فقط از GitHub Actions** دیپلوی می‌شود (`daizima-frontend-new` → Deploy apps). پوش روی `main` آن را بالا نمی‌آورد. راهنما: `[daizima-frontend-new/docs/GITHUB_DEPLOY.md](../daizima-frontend-new/docs/GITHUB_DEPLOY.md)`. اسکریپت `deploy-from-local.sh frontend` هنوز فرانت **قدیمی** (`:3000`) را می‌فرستد.
 
 اتصال SSH: `ssh root@185.18.212.24`  
 تنظیمات دیپلوی محلی: `deploy/deploy.local.env` (از `deploy.local.env.example` کپی کنید).  
@@ -21,7 +33,7 @@
 
 ## Multi-app domains
 
-جزئیات: [`MULTI_APP.md`](MULTI_APP.md) — nginx: [`_remote-nginx-multi-app.conf`](_remote-nginx-multi-app.conf)
+جزئیات: `[MULTI_APP.md](MULTI_APP.md)` — nginx: `[_remote-nginx-multi-app.conf](_remote-nginx-multi-app.conf)`
 
 | دامنه | اپ | پورت |
 |-------|-----|------|

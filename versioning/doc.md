@@ -1,5 +1,11 @@
 # ورژن‌گذاری انتشار اپ — دایزیما (Daizima)
 
+```
+./deploy/versioning/bump-backend.sh --no-tag --yes
+./deploy/versioning/bump-frontend.sh --no-tag --yes
+```
+
+
 این سند فقط **ورژن انتشار اپ** (Release / SemVer) را پوشش می‌دهد، نه ورژن API (`/api/v1`).
 
 اسکریپت‌ها وضعیت git و تاریخچه commitها را بررسی می‌کنند، سطح bump را پیشنهاد می‌دهند، فایل‌های ورژن را به‌روز می‌کنند و در صورت نیاز تگ `vX.Y.Z` می‌سازند.
@@ -89,7 +95,7 @@ git add -A && git commit -m "feat: ..."
 
 فرمت: **[Semantic Versioning](https://semver.org/)** — `MAJOR.MINOR.PATCH`
 
-تحلیل از **آخرین تگ `v*`** تا `HEAD` (اگر تگی نباشد، کل تاریخچه شاخه).
+تحلیل از **آخرین تگ `v`*** تا `HEAD` (اگر تگی نباشد، کل تاریخچه شاخه).
 
 | سطح | چه زمانی پیشنهاد می‌شود |
 |-----|-------------------------|
@@ -171,7 +177,7 @@ cd ../daizima-frontend-new && git push
 
 ## مرتبط
 
-- دیپلوی: [`../deploy-from-local.sh`](../deploy-from-local.sh)
-- پرداخت ملت: [`../../daizima-backend/docs/mellat-payment-deployment.md`](../../daizima-backend/docs/mellat-payment-deployment.md)
+- دیپلوی: `[../deploy-from-local.sh](../deploy-from-local.sh)`
+- پرداخت ملت: `[../../daizima-backend/docs/mellat-payment-deployment.md](../../daizima-backend/docs/mellat-payment-deployment.md)`
 
 **دایزیما (Daizima)** · https://daizima.com/
