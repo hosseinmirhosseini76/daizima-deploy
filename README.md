@@ -2,9 +2,9 @@
 
 ## Immediate Commands
 ```
-./scripts/sync-production-storage.sh root@185.18.212.24 /var/www/daizima-backend
 ./scripts/sync-production-db.sh -y root@185.18.212.24 /var/www/daizima-backend
 ./scripts/sync-production-db.sh --download-only root@185.18.212.24 /var/www/daizima-backend
+./scripts/sync-production-storage.sh root@185.18.212.24 /var/www/daizima-backend
 ```
 
 ## Fast Backend Deploy
