@@ -222,3 +222,36 @@ curl -sD - -o /dev/null "https://daizima.com/" | grep -iE 'cache-control|cf-cach
 Zone: `daizima.com`
 
 توکن را در `deploy/deploy.local.env` به‌صورت `CLOUDFLARE_API_TOKEN=` بگذار (جایگزین مقدار فعلی). بعد از آن می‌توان قوانین را از API ساخت و کش `/api/v1/products*` را purge کرد.
+
+---
+
+## باطل‌سازی خودکار PDP هنگام تغییر تنوع (backend)
+
+با تغییر `price` / `stock_quantity` / `is_available` / پیشنهاد ویژه، بک‌اند:
+
+1. نسخه کش Redis محصول و کاتالوگ را بالا می‌برد (`ProductPublicCacheService`)
+2. اگر env زیر ست باشد، از Cloudflare API همان URLهای محصول را purge می‌کند:
+
+```env
+# روی سرور: /var/www/daizima-backend/.env
+CLOUDFLARE_ZONE_ID=
+CLOUDFLARE_API_TOKEN=
+CLOUDFLARE_STOREFRONT_ORIGIN=https://daizima.com
+```
+
+فایل‌های purge‌شده معمولاً:
+
+- `https://daizima.com/api/v1/products/{slug}`
+- `https://daizima.com/api/v1/products/{id}`
+
+بدون این env فقط Redis باطل می‌شود؛ edge تا `s-maxage` origin (~۶۰s) کهنه می‌ماند.
+
+دیپلوی کامل Reverb + این purge: [`WEBSOCKET_AND_CACHE.md`](WEBSOCKET_AND_CACHE.md)
+
+همچنین در قانون Bypass — Private، مسیرهای سبد را نگه دارید تا checkout/cart هرگز HIT نشوند:
+
+```txt
+starts_with(http.request.uri.path, "/api/v1/cart")
+or starts_with(http.request.uri.path, "/api/v2/cart")
+or starts_with(http.request.uri.path, "/api/v1/checkout")
+```

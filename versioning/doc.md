@@ -178,6 +178,9 @@ cd ../daizima-frontend-new && git push
 ## مرتبط
 
 - دیپلوی: `[../deploy-from-local.sh](../deploy-from-local.sh)`
+- WebSocket / Cloudflare / کش محصول: `[../WEBSOCKET_AND_CACHE.md](../WEBSOCKET_AND_CACHE.md)`
+- Cloudflare Cache Rules: `[../cloudflare-cache-rules.md](../cloudflare-cache-rules.md)`
+- Multi-app frontend: `[../MULTI_APP.md](../MULTI_APP.md)`
 - پرداخت ملت: `[../../daizima-backend/docs/mellat-payment-deployment.md](../../daizima-backend/docs/mellat-payment-deployment.md)`
 
 **دایزیما (Daizima)** · https://daizima.com/

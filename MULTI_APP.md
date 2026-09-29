@@ -37,7 +37,11 @@ NUXT_PUBLIC_ADMIN_APP_URL=https://admin.daizima.com
 NUXT_PUBLIC_USER_APP_URL=https://user.daizima.com
 NUXT_PUBLIC_AUTH_COOKIE_DOMAIN=.daizima.com
 NUXT_PUBLIC_API_BASE_URL=/api
+# Admin cart alerts (Laravel Reverb). Prefer admin host that serves location /ws/
+NUXT_PUBLIC_WEBSOCKET_URL=wss://admin.daizima.com/ws
 ```
+
+WebSocket + product cache deploy checklist: [`WEBSOCKET_AND_CACHE.md`](WEBSOCKET_AND_CACHE.md)
 
 ## Auth cookie SSO
 

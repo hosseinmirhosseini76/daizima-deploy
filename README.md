@@ -41,6 +41,24 @@
 | `admin.daizima.com` | admin | `3022` |
 | `user.daizima.com` | user | `3023` |
 
+## WebSocket (Reverb) + کش محصول / Cloudflare
+
+قبل از دیپلوی بک‌اند/ادمین برای اعلان سبد و قیمت تازه، این راهنما را کامل کنید:
+
+**[`WEBSOCKET_AND_CACHE.md`](WEBSOCKET_AND_CACHE.md)**
+
+خلاصه:
+
+| موضوع | عمل |
+|--------|-----|
+| Backend `.env` | `BROADCAST_*=reverb` + `REVERB_*` + اختیاری `CLOUDFLARE_*` |
+| Docker | `docker-compose up -d --force-recreate websocket` |
+| Nginx | `location /ws/` → `127.0.0.1:6101/` (با strip پیشوند) روی admin (و ترجیحاً apex) |
+| Frontend admin | `NUXT_PUBLIC_WEBSOCKET_URL=wss://admin.daizima.com/ws` در GitHub Variables / `.env.prod` |
+| Cloudflare | Cache Rules: Respect origin برای products؛ Bypass برای cart/checkout؛ توکن Purge در بک‌اند |
+
+Cloudflare rules کامل: [`cloudflare-cache-rules.md`](cloudflare-cache-rules.md)
+
 ## ۱. Deploy
 
 از ریشه monorepo (مثلاً `g:/business/Daizima`):
@@ -83,10 +101,10 @@ bash scripts/summarize-perf.sh
 
 ```
 cd /var/www/daizima-backend
-docker compose exec app php artisan media:optimize-images --path=product_images
+docker-compose exec app php artisan media:optimize-images --path=product_images
 # سایر پوشه‌ها در صورت نیاز:
-# docker compose exec app php artisan media:optimize-images --path=brand_images
-# docker compose exec app php artisan media:optimize-images --path=homepage_images
+# docker-compose exec app php artisan media:optimize-images --path=brand_images
+# docker-compose exec app php artisan media:optimize-images --path=homepage_images
 ```
 
 بعد از آپدیت nginx conf: `nginx -t && systemctl reload nginx`

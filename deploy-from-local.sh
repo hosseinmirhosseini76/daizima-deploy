@@ -193,7 +193,7 @@ deploy_frontend() {
     export NUXT_PUBLIC_API_BASE_URL="${NUXT_PUBLIC_API_BASE_URL:-/api}"
     export NUXT_API_PROXY_TARGET="${NUXT_API_PROXY_TARGET:-http://127.0.0.1:8100}"
     export NUXT_PUBLIC_SITE_URL="${NUXT_PUBLIC_SITE_URL:-https://daizima.com}"
-    export NUXT_PUBLIC_WEBSOCKET_URL="${NUXT_PUBLIC_WEBSOCKET_URL:-wss://daizima.com/ws}"
+    export NUXT_PUBLIC_WEBSOCKET_URL="${NUXT_PUBLIC_WEBSOCKET_URL:-wss://admin.daizima.com/ws}"
     export NUXT_PUBLIC_APP_NAME="${NUXT_PUBLIC_APP_NAME:-Daizima}"
     export NUXT_PUBLIC_APP_ENV="${NUXT_PUBLIC_APP_ENV:-production}"
     NODE_OPTIONS="--max-old-space-size=4096" run_pnpm run build
@@ -268,11 +268,60 @@ deploy_backend() {
   log_info "Uploading single archive to server..."
   upload_file "$ARCHIVE" "${REMOTE_BACKEND_PATH}/deploy-source.tar.gz"
 
-  log_info "Extracting on server and running offline update..."
+  log_info "Extracting on server, syncing production env (Reverb + Cloudflare), running offline update..."
+  # Values from deploy.local.env — empty means "do not overwrite remote Cloudflare"
   remote "set -e
     cd '$REMOTE_BACKEND_PATH'
     tar -xzf deploy-source.tar.gz
     rm -f deploy-source.tar.gz
+
+    ENV_FILE='$REMOTE_BACKEND_PATH/.env'
+    upsert_env() {
+      local key=\"\$1\"
+      local value=\"\$2\"
+      [ -n \"\$value\" ] || return 0
+      if grep -q \"^\${key}=\" \"\$ENV_FILE\" 2>/dev/null; then
+        sed -i \"s|^\${key}=.*|\${key}=\${value}|\" \"\$ENV_FILE\"
+      else
+        printf '\\n%s=%s\\n' \"\$key\" \"\$value\" >> \"\$ENV_FILE\"
+      fi
+    }
+
+    # Reverb / broadcast (required for admin cart alerts)
+    upsert_env BROADCAST_CONNECTION reverb
+    upsert_env BROADCAST_DRIVER reverb
+    upsert_env REVERB_APP_ID daizima
+    if ! grep -q '^REVERB_APP_KEY=.' \"\$ENV_FILE\" 2>/dev/null; then
+      upsert_env REVERB_APP_KEY \"\$(openssl rand -hex 16)\"
+    fi
+    if ! grep -q '^REVERB_APP_SECRET=.' \"\$ENV_FILE\" 2>/dev/null; then
+      upsert_env REVERB_APP_SECRET \"\$(openssl rand -hex 32)\"
+    fi
+    upsert_env REVERB_SERVER_HOST 0.0.0.0
+    upsert_env REVERB_SERVER_PORT 6001
+    upsert_env REVERB_HOST websocket
+    upsert_env REVERB_PORT 6001
+    upsert_env REVERB_SCHEME http
+    upsert_env REVERB_CLIENT_HOST admin.daizima.com
+    upsert_env REVERB_CLIENT_PORT 443
+    upsert_env REVERB_CLIENT_SCHEME https
+    upsert_env REVERB_CLIENT_PATH /ws
+
+    # Keep Pusher-* aliases aligned with Reverb (Echo protocol)
+    REVERB_KEY=\$(grep '^REVERB_APP_KEY=' \"\$ENV_FILE\" | head -1 | cut -d= -f2-)
+    REVERB_SECRET=\$(grep '^REVERB_APP_SECRET=' \"\$ENV_FILE\" | head -1 | cut -d= -f2-)
+    upsert_env PUSHER_APP_ID daizima
+    upsert_env PUSHER_APP_KEY \"\$REVERB_KEY\"
+    upsert_env PUSHER_APP_SECRET \"\$REVERB_SECRET\"
+    upsert_env PUSHER_HOST websocket
+    upsert_env PUSHER_PORT 6001
+    upsert_env PUSHER_SCHEME http
+
+    # Cloudflare product cache purge (from deploy.local.env when set)
+    upsert_env CLOUDFLARE_ZONE_ID '${CLOUDFLARE_ZONE_ID:-}'
+    upsert_env CLOUDFLARE_API_TOKEN '${CLOUDFLARE_API_TOKEN:-}'
+    upsert_env CLOUDFLARE_STOREFRONT_ORIGIN '${CLOUDFLARE_STOREFRONT_ORIGIN:-https://daizima.com}'
+
     chmod +x update-offline.sh
     bash update-offline.sh"
 

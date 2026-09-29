@@ -34,7 +34,7 @@ docker-compose restart
 NUXT_PUBLIC_API_BASE_URL=/api
 NUXT_API_PROXY_TARGET=http://127.0.0.1:8000
 NUXT_PUBLIC_SITE_URL=https://daizima.com
-NUXT_PUBLIC_WEBSOCKET_URL=wss://daizima.com/ws
+NUXT_PUBLIC_WEBSOCKET_URL=wss://admin.daizima.com/ws
 NUXT_PUBLIC_APP_ENV=production
 ```
 
@@ -153,7 +153,9 @@ return 301 https://daizima.com$request_uri;
 
 - [ ] `https://daizima.com` بدون certificate error
 - [ ] API: `curl -I https://daizima.com/api/v1/categories/tree` → 200
-- [ ] WebSocket: `wss://daizima.com/ws` (اگر استفاده می‌کنید)
+- [ ] WebSocket ادمین: `wss://admin.daizima.com/ws` (یا `wss://daizima.com/ws` اگر فقط روی apex پروکسی شده) — جزئیات: [`WEBSOCKET_AND_CACHE.md`](WEBSOCKET_AND_CACHE.md)
+- [ ] اعلان افزودن به سبد در ادمین بعد از add-to-cart فروشگاه
+- [ ] تغییر قیمت/موجودی → PDP تازه؛ سبد مودال تغییرات را نشان دهد
 - [ ] login / cart / checkout
 - [ ] بازگشت از درگاه به `/checkout/payment/result`
 - [ ] تصاویر `storage` با `https://daizima.com/storage/...` (بعد از `APP_URL`)
@@ -173,7 +175,11 @@ return 301 https://daizima.com$request_uri;
 |--------|-------------------|
 | `FORCE_HTTPS` | `true` |
 | `APP_URL` / `FRONTEND_URL` | `https://daizima.com` |
+| `BROADCAST_CONNECTION` / `BROADCAST_DRIVER` | `reverb` |
+| `REVERB_CLIENT_HOST` / `PATH` | `admin.daizima.com` / `/ws` |
+| `CLOUDFLARE_ZONE_ID` + `CLOUDFLARE_API_TOKEN` | اختیاری ولی توصیه‌شده برای purge PDP |
+| `CLOUDFLARE_STOREFRONT_ORIGIN` | `https://daizima.com` |
 | `NUXT_PUBLIC_SITE_URL` | `https://daizima.com` |
 | `NUXT_PUBLIC_API_BASE_URL` | `/api` |
-| `NUXT_PUBLIC_WEBSOCKET_URL` | `wss://daizima.com/ws` |
-| `DEPLOY_HOST` (SSH) | `212.23.201.113` (همان IP سرور) |
+| `NUXT_PUBLIC_WEBSOCKET_URL` | `wss://admin.daizima.com/ws` |
+| `DEPLOY_HOST` (SSH) | `185.18.212.24` (یا IP فعلی سرور) |
