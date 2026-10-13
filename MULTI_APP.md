@@ -8,8 +8,11 @@
 | Admin | `https://admin.daizima.com` | `http://127.0.0.1:3022` | `:3022` |
 | User | `https://user.daizima.com` | `http://127.0.0.1:3023` | `:3023` |
 | Content | `https://content.daizima.com` | `http://127.0.0.1:3024` | `:3024` |
+| Mail (HTTP) | `https://mail.daizima.com` | — | ریدایرکت ۳۰۱ به `daizima.com` — [`_remote-nginx-mail.conf`](_remote-nginx-mail.conf) |
 
 Content Platform + Content Bot: [`CONTENT_APP.md`](CONTENT_APP.md) — nginx: [`_remote-nginx-content.conf`](_remote-nginx-content.conf).
+
+**مهم:** هر ساب‌دامین بدون `server_name` روی این VPS به **اولین** vhost SSL (معمولاً admin) می‌افتد. برای `mail.daizima.com` حتماً [`_remote-nginx-mail.conf`](_remote-nginx-mail.conf) را نصب کنید تا به‌جای پنل ادمین به فروشگاه ریدایرکت شود.
 
 **Deploy is GitHub-only** (`daizima-frontend-new` → Actions → Deploy apps). No deploy on push. Guide: [`daizima-frontend-new/docs/GITHUB_DEPLOY.md`](../daizima-frontend-new/docs/GITHUB_DEPLOY.md).
 
