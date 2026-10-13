@@ -19,6 +19,31 @@
 
 ---
 
+## به‌روزرسانی داک — کش PDP (۲۰۲۶-۱۰-۰۵)
+
+قانون **۶) API homepage / catalog** باید جزئیات محصول را هم بگیرد. expression پیشنهادی (کپی در Dashboard):
+
+```txt
+(http.request.method eq "GET" and (
+  starts_with(http.request.uri.path, "/api/v2/homepage-sections")
+  or starts_with(http.request.uri.path, "/api/v2/categories")
+  or starts_with(http.request.uri.path, "/api/v1/brands")
+  or http.request.uri.path eq "/api/v1/products"
+  or starts_with(http.request.uri.path, "/api/v1/products/")
+))
+```
+
+| قبل | بعد |
+|-----|-----|
+| فقط `eq "/api/v1/products"` (لیست) | لیست + `starts_with ".../products/"` (PDP، filters، similar، …) |
+| PDP همیشه به origin می‌رفت | Edge با `s-maxage` origin (~۶۰s) می‌تواند HIT شود |
+
+**اقدام در Dashboard:** همین expression را روی قانون catalog جایگزین کن؛ Edge TTL = **Respect origin**؛ Bypass پیشنهاد ویژه (قانون ۲) بالاتر بماند. بعد یک slug واقعی را دو بار curl بزن (بخش تست پایین).
+
+وضعیت اعمال در zone: تا وقتی expression در Dashboard عوض نشده، پروداکشن هنوز فقط لیست را Eligible می‌کند.
+
+---
+
 ## وضعیت قبلی (علت کندی پیشنهاد ویژه)
 
 روی پروداکشن اندازه‌گیری شد:
@@ -139,12 +164,15 @@ Edge TTL: Respect origin (origin حدود `s-maxage=3600` می‌دهد).
 
 ### ۶) API homepage / catalog
 
+شامل **لیست** و **جزئیات محصول (PDP)** است. قبلاً فقط `eq "/api/v1/products"` بود و مسیرهای `/api/v1/products/{slug}` به origin می‌رفتند.
+
 ```txt
 (http.request.method eq "GET" and (
   starts_with(http.request.uri.path, "/api/v2/homepage-sections")
   or starts_with(http.request.uri.path, "/api/v2/categories")
   or starts_with(http.request.uri.path, "/api/v1/brands")
   or http.request.uri.path eq "/api/v1/products"
+  or starts_with(http.request.uri.path, "/api/v1/products/")
 ))
 ```
 
@@ -156,6 +184,8 @@ Edge TTL: Respect origin (origin حدود `s-maxage=3600` می‌دهد).
 | **Cache key** | Query string را **شامل کن** |
 
 `/api/v1/products?special_offer=true` را این قانون نباید کش کند؛ Rule ۲ Bypass می‌کند. اگر Bypass نباشد، origin حالا `Cloudflare-CDN-Cache-Control: no-store` می‌فرستد — فقط وقتی Edge TTL = Respect origin اثر دارد.
+
+PDP (`/api/v1/products/{slug}`) از origin معمولاً `s-maxage=60` می‌گیرد؛ با تغییر موجودی/قیمت بک‌اند همان URL را purge می‌کند (بخش «باطل‌سازی خودکار PDP»).
 
 ### ۷) HTML pages (صفحه اول)
 
@@ -205,9 +235,15 @@ curl -sD - -o /dev/null "https://daizima.com/api/v2/special-offer-products?per_p
 
 # HTML: max-age نباید 31536000 باشد
 curl -sD - -o /dev/null "https://daizima.com/" | grep -iE 'cache-control|cf-cache-status'
+
+# PDP: بعد از اعمال قانون ۶ باید MISS سپس HIT شود (نه همیشه DYNAMIC)
+curl -sD - -o /dev/null "https://daizima.com/api/v1/products/SOME-PRODUCT-SLUG" \
+  | grep -iE 'cf-cache-status|cache-control|^age:'
 ```
 
 انتظار پیشنهاد ویژه: `cf-cache-status: DYNAMIC` یا `BYPASS`، و `Cache-Control` شامل `no-store`.
+
+انتظار PDP عمومی: `Cache-Control` شامل `s-maxage=60`؛ درخواست دوم `cf-cache-status: HIT` (یا `REVALIDATED`).
 
 ---
 

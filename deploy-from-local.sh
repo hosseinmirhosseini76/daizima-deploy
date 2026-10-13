@@ -268,8 +268,30 @@ deploy_backend() {
   log_info "Uploading single archive to server..."
   upload_file "$ARCHIVE" "${REMOTE_BACKEND_PATH}/deploy-source.tar.gz"
 
-  log_info "Extracting on server, syncing production env (Reverb + Cloudflare), running offline update..."
-  # Values from deploy.local.env — empty means "do not overwrite remote Cloudflare"
+  # Content Bot: never ship local host-relay URL to production.
+  # Prefer deploy.local.env; fall back to backend .env for the API key only.
+  local CONTENT_BOT_KEY="${CONTENT_BOT_LLM_API_KEY:-}"
+  if [ -z "$CONTENT_BOT_KEY" ] && [ -f "$ROOT_DIR/daizima-backend/.env" ]; then
+    CONTENT_BOT_KEY="$(grep -E '^CONTENT_BOT_LLM_API_KEY=' "$ROOT_DIR/daizima-backend/.env" | head -1 | cut -d= -f2- || true)"
+  fi
+  if [ -z "$CONTENT_BOT_KEY" ] && [ -f "$ROOT_DIR/daizima-backend/.env" ]; then
+    CONTENT_BOT_KEY="$(grep -E '^GEMINI_API_KEY=' "$ROOT_DIR/daizima-backend/.env" | head -1 | cut -d= -f2- || true)"
+  fi
+  local CONTENT_BOT_URL="${CONTENT_BOT_LLM_API_URL:-https://daizima-content-bot-llm.daizimaofficial.workers.dev}"
+  case "$CONTENT_BOT_URL" in
+    *host.docker.internal*|*127.0.0.1:8791*|*localhost:8791*)
+      log_warn "CONTENT_BOT_LLM_API_URL looks local ($CONTENT_BOT_URL); using Cloudflare Worker URL for production."
+      CONTENT_BOT_URL="https://daizima-content-bot-llm.daizimaofficial.workers.dev"
+      ;;
+  esac
+  local CONTENT_BOT_MODEL="${CONTENT_BOT_LLM_MODEL:-gemini-flash-lite-latest}"
+  local CONTENT_BOT_DRAFT="${CONTENT_BOT_PUBLISH_AS_DRAFT:-true}"
+  local CONTENT_BOT_SERPER="${CONTENT_BOT_SERPER_API_KEY:-}"
+  local CONTENT_BOT_RELAY="${CONTENT_BOT_LLM_RELAY_TOKEN:-}"
+  local QUEUE_RETRY_AFTER="${REDIS_QUEUE_RETRY_AFTER:-660}"
+
+  log_info "Extracting on server, syncing production env (Reverb + Cloudflare + Content Bot), running offline update..."
+  # Values from deploy.local.env — empty means "do not overwrite remote Cloudflare / secrets"
   remote "set -e
     cd '$REMOTE_BACKEND_PATH'
     tar -xzf deploy-source.tar.gz
@@ -321,6 +343,24 @@ deploy_backend() {
     upsert_env CLOUDFLARE_ZONE_ID '${CLOUDFLARE_ZONE_ID:-}'
     upsert_env CLOUDFLARE_API_TOKEN '${CLOUDFLARE_API_TOKEN:-}'
     upsert_env CLOUDFLARE_STOREFRONT_ORIGIN '${CLOUDFLARE_STOREFRONT_ORIGIN:-https://daizima.com}'
+
+    # Content Bot (Laravel-native pipeline + CF Worker LLM relay)
+    # See deploy/CONTENT_APP.md — content.daizima.com SPA cutover stays gated.
+    upsert_env CONTENT_BOT_LLM_API_KEY '${CONTENT_BOT_KEY}'
+    upsert_env CONTENT_BOT_LLM_API_URL '${CONTENT_BOT_URL}'
+    upsert_env CONTENT_BOT_LLM_MODEL '${CONTENT_BOT_MODEL}'
+    upsert_env CONTENT_BOT_PUBLISH_AS_DRAFT '${CONTENT_BOT_DRAFT}'
+    upsert_env CONTENT_BOT_SERPER_API_KEY '${CONTENT_BOT_SERPER}'
+    upsert_env CONTENT_BOT_LLM_RELAY_TOKEN '${CONTENT_BOT_RELAY}'
+    upsert_env REDIS_QUEUE_RETRY_AFTER '${QUEUE_RETRY_AFTER}'
+
+    # HttpOnly Sanctum access cookie (cross-subdomain SSO with frontend)
+    upsert_env AUTH_ACCESS_COOKIE_NAME dz_access_token
+    upsert_env AUTH_COOKIE_DOMAIN '.daizima.com'
+    upsert_env AUTH_ACCESS_COOKIE_TTL 1440
+    upsert_env AUTH_COOKIE_SECURE true
+    upsert_env AUTH_COOKIE_SAME_SITE lax
+    upsert_env AUTH_EXPOSE_TOKEN_IN_BODY false
 
     chmod +x update-offline.sh
     bash update-offline.sh"

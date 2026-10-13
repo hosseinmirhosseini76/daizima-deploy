@@ -40,6 +40,22 @@
 | `daizima.com` | storefront | `3021` |
 | `admin.daizima.com` | admin | `3022` |
 | `user.daizima.com` | user | `3023` |
+| `content.daizima.com` | content | `3024` |
+
+## Content Bot (بک‌اند)
+
+API و صف Content Bot با همان دیپلوی بک‌اند می‌آید. ساب‌دامین Content هنوز gated است.
+
+**[`CONTENT_APP.md`](CONTENT_APP.md)** — env، Cloudflare Worker، تأیید بعد از دیپلوی.
+
+خلاصه قبل از `./deploy/deploy-from-local.sh backend --skip-pull`:
+
+| موضوع | عمل |
+|--------|-----|
+| Worker | کد `workers/content-bot-llm/src/index.js` روی CF Deploy باشد |
+| `deploy.local.env` | `CONTENT_BOT_LLM_*` + `REDIS_QUEUE_RETRY_AFTER=660` |
+| مدل | `gemini-flash-lite-latest` (پایدارتر از flash-lite قدیمی) |
+| URL پروداکشن | Worker `*.workers.dev` — نه `host.docker.internal` |
 
 ## WebSocket (Reverb) + کش محصول / Cloudflare
 
@@ -227,5 +243,101 @@ Test Sending SMS
 
 ```
 docker-compose exec app php artisan kavenegar:test --send --phone=09194391758
+```
+
+---
+
+## Map POI Collector (OpenStreetMap → SQLite)
+
+پروژه: `map-poi-collector/`  
+جمع‌آوری کسب‌وکارهای ثبت‌شده در OSM به‌صورت شهر به شهر، بدون API key و بدون scrape مرورگر.  
+جزئیات بیشتر: [`map-poi-collector/README.md`](../map-poi-collector/README.md)
+
+### نصب
+
+```
+cd map-poi-collector
+npm install
+```
+
+نیاز: Node.js 20+
+
+دیتابیس پیش‌فرض: `map-poi-collector/data/places.db`  
+تغییر مسیر DB در همهٔ دستورها: `--db ./path/to/places.db`
+
+### لیست شهرهای ایران از OSM
+
+```
+# دانلود city + town + municipality → جدول city_catalog
+npm run fetch-iran-cities
+
+# همان + خروجی CSV
+npm run fetch-iran-cities -- --export-csv data/iran-cities.csv
+
+# شامل روستاها (حجم خیلی بیشتر)
+npm run fetch-iran-cities -- --include-villages
+
+# مشاهده کاتالوگ
+npm run list-iran-cities
+npm run list-iran-cities -- --place-type city --limit 50
+```
+
+### جمع‌آوری کسب‌وکارها (شهر به شهر)
+
+```
+# یک شهر (EN یا FA)
+npm run collect -- --city Shahrood
+npm run collect -- --city شاهرود
+npm run collect -- --city تهران
+
+# چند شهر مشخص
+npx tsx src/cli.ts collect-many --cities "Shahrood,Isfahan"
+
+# موازی (۲–۳ پیشنهاد می‌شود؛ Overpass عمومی تحمل بار بالا ندارد)
+npx tsx src/cli.ts collect-many --cities "Shahrood,Isfahan,Shiraz" --concurrency 3 --delay-ms 1500
+npx tsx src/cli.ts collect-many --from-catalog --place-type city --concurrency 2 --delay-ms 2000
+
+# همهٔ presetهای داخلی (شاهرود، تهران، مشهد، اصفهان، شیراز، تبریز)
+npx tsx src/cli.ts collect-many
+
+# همهٔ cityهای کاتالوگ OSM (طولانی؛ فاصله بین شهرها)
+npx tsx src/cli.ts collect-many --from-catalog --place-type city --delay-ms 8000
+
+# فقط townها از کاتالوگ
+npx tsx src/cli.ts collect-many --from-catalog --place-type town --delay-ms 8000
+```
+
+`--concurrency N`: چند شهر هم‌زمان.  
+`--delay-ms`: فاصلهٔ شروع slotها تا stampede روی یک mirror نشود.
+
+### وضعیت / لیست‌ها / آمار
+
+```
+# شهرهایی که جمع‌آوری شده‌اند (با تعداد places)
+npm run list-cities
+
+# presetهای داخلی با bbox
+npx tsx src/cli.ts list-presets
+
+# آمار کلی (cities / places / phone / hours / address / catalog)
+npm run stats
+```
+
+### جداول مهم SQLite
+
+| جدول | نقش |
+|------|-----|
+| `city_catalog` | لیست شهر/town ایران از OSM |
+| `cities` | شهرهایی که برایشان collect زده شده + bbox |
+| `places` | کسب‌وکارها (نام، تلفن، آدرس، ساعت، lat/lng، …) |
+| `collect_runs` | تاریخچهٔ هر اجرا |
+
+نمونه کوئری:
+
+```
+SELECT name, phone, address, opening_hours, category, subcategory
+FROM places
+WHERE city_id = 1 AND phone IS NOT NULL
+LIMIT 50;
 ```
 

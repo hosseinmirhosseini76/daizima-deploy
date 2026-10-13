@@ -7,6 +7,9 @@
 | Storefront | `https://daizima.com` | `http://127.0.0.1:3021` | `:3021` |
 | Admin | `https://admin.daizima.com` | `http://127.0.0.1:3022` | `:3022` |
 | User | `https://user.daizima.com` | `http://127.0.0.1:3023` | `:3023` |
+| Content | `https://content.daizima.com` | `http://127.0.0.1:3024` | `:3024` |
+
+Content Platform + Content Bot: [`CONTENT_APP.md`](CONTENT_APP.md) — nginx: [`_remote-nginx-content.conf`](_remote-nginx-content.conf).
 
 **Deploy is GitHub-only** (`daizima-frontend-new` → Actions → Deploy apps). No deploy on push. Guide: [`daizima-frontend-new/docs/GITHUB_DEPLOY.md`](../daizima-frontend-new/docs/GITHUB_DEPLOY.md).
 
@@ -35,6 +38,7 @@ Baked at **GitHub Actions build** from `.env.prod` (plus repo Variables). Also c
 NUXT_PUBLIC_STOREFRONT_URL=https://daizima.com
 NUXT_PUBLIC_ADMIN_APP_URL=https://admin.daizima.com
 NUXT_PUBLIC_USER_APP_URL=https://user.daizima.com
+NUXT_PUBLIC_CONTENT_APP_URL=https://content.daizima.com
 NUXT_PUBLIC_AUTH_COOKIE_DOMAIN=.daizima.com
 NUXT_PUBLIC_API_BASE_URL=/api
 # Admin cart alerts (Laravel Reverb). Prefer admin host that serves location /ws/
