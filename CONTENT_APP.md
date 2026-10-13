@@ -44,7 +44,7 @@ Worker خام: `https://daizima-content-bot-llm.daizimaofficial.workers.dev` (ف
 # Content Bot — synced to /var/www/daizima-backend/.env on backend deploy
 CONTENT_BOT_LLM_API_KEY=          # Gemini key (یا از daizima-backend/.env خوانده می‌شود اگر خالی باشد)
 CONTENT_BOT_LLM_API_URL=https://daizima-content-bot-llm.daizimaofficial.workers.dev
-CONTENT_BOT_LLM_MODEL=gemini-flash-lite-latest
+CONTENT_BOT_LLM_MODEL=gemini-3.5-flash
 CONTENT_BOT_PUBLISH_AS_DRAFT=true
 # CONTENT_BOT_SERPER_API_KEY=
 # CONTENT_BOT_LLM_RELAY_TOKEN=
@@ -118,7 +118,7 @@ docker-compose logs queue --tail 30
 | Laravel API | `/api/content/bot/*` (admin \| super_admin) |
 | Host relay | `node workers/content-bot-llm/host-relay.mjs` → `:8791` |
 | Backend env | `CONTENT_BOT_LLM_API_URL=http://host.docker.internal:8791` |
-| مدل پایدار | `CONTENT_BOT_LLM_MODEL=gemini-flash-lite-latest` |
+| مدل پایدار | `CONTENT_BOT_LLM_MODEL=gemini-3.5-flash` (fallback: `CONTENT_BOT_LLM_FALLBACK_MODELS`) |
 
 ---
 
