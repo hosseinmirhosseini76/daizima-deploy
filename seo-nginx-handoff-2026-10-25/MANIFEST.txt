@@ -1,0 +1,50 @@
+Daizima — Nginx logs sanitized export for SEO audit
+============================================================
+
+Generated at (UTC): 2026-10-25T16:21:20Z
+Server timezone: Etc/UTC (UTC+0000)
+Source: /var/log/nginx/ (raw preserve copy kept separately)
+Raw preserve path on server: /var/backups/daizima-seo-nginx-logs/raw-preserve-2026-10-25
+Preserved file count: 31
+
+ACCESS LOG COVERAGE
+  Actual start: 2026-10-11T00:00:42Z
+  Actual end:   2026-10-25T16:16:25Z
+  Days with log lines: 15 (2026-10-11, 2026-10-12, 2026-10-13, 2026-10-14, 2026-10-15, 2026-10-16, 2026-10-17, 2026-10-18, 2026-10-19, 2026-10-20, 2026-10-21, 2026-10-22, 2026-10-23, 2026-10-24, 2026-10-25)
+  Days without access logs in range: (none)
+  Sanitized rows: 1346549
+  Parse failures skipped: 0
+  Rows with Googlebot-like UA string: 32716
+
+ERROR LOG COVERAGE
+  Actual start: 2026-09-27T00:13:46Z
+  Actual end:   2026-10-24T14:57:05Z
+  Days with error lines: 14 (2026-09-27, 2026-09-28, 2026-09-29, 2026-09-30, 2026-10-06, 2026-10-08, 2026-10-10, 2026-10-11, 2026-10-12, 2026-10-13, 2026-10-15, 2026-10-18, 2026-10-19, 2026-10-24)
+  Days without error lines in error range: 14 (normal if nginx had no errors; sample: 2026-10-01, 2026-10-02, 2026-10-03, 2026-10-04, 2026-10-05, 2026-10-07, 2026-10-09, 2026-10-14, 2026-10-16, 2026-10-17...)
+  Sanitized error lines: 130
+
+FIELDS KEPT (as available in origin combined log format)
+  - timestamp (UTC)
+  - request method / path / HTTP version
+  - response status code
+  - bytes sent
+  - referer (sanitized)
+  - User-Agent
+
+FIELDS NOT AVAILABLE IN CURRENT NGINX LOG FORMAT
+  - response time (request_time) — not logged on origin
+  - cache status (upstream_cache_status) — not logged on origin
+  CSV columns left empty intentionally.
+
+REMOVED / REDACTED
+  - client IP addresses
+  - cookies / tokens / session_id / otp / api keys in URLs
+  - long opaque query values and websocket app keys
+
+GOOGLEBOT VERIFICATION
+  Status: unknown / not previously verified for this handoff
+  Method: n/a — only UA-string tagging in notes; no reverse-DNS or Google IP range check performed
+
+SERVER CHANGES
+  None to nginx config, cache, or logrotate retention (still rotate 14).
+  Only: raw copy under /var/backups/daizima-seo-nginx-logs/ and this sanitized export.

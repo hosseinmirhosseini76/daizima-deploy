@@ -3,8 +3,10 @@
 ```
 ./deploy/versioning/bump-backend.sh --no-tag --yes
 ./deploy/versioning/bump-frontend.sh --no-tag --yes
-```
 
+./deploy/versioning/bump-backend.sh --no-tag --yes --patch
+./deploy/versioning/bump-frontend.sh --no-tag --yes --patch
+```
 
 این سند فقط **ورژن انتشار اپ** (Release / SemVer) را پوشش می‌دهد، نه ورژن API (`/api/v1`).
 
@@ -95,7 +97,7 @@ git add -A && git commit -m "feat: ..."
 
 فرمت: **[Semantic Versioning](https://semver.org/)** — `MAJOR.MINOR.PATCH`
 
-تحلیل از **آخرین تگ `v`*** تا `HEAD` (اگر تگی نباشد، کل تاریخچه شاخه).
+تحلیل از **آخرین تگ** `v`* تا `HEAD` (اگر تگی نباشد، کل تاریخچه شاخه).
 
 | سطح | چه زمانی پیشنهاد می‌شود |
 |-----|-------------------------|
@@ -158,7 +160,7 @@ cd ../daizima-frontend-new && git push
 
 1. **تگ git** فقط وقتی ساخته می‌شود که working tree **تمیز** باشد؛ با `--allow-dirty` می‌توانید ورژن فایل‌ها را عوض کنید و بعداً خودتان commit + tag بزنید.
 2. **Backend و Frontend** ورژن مستقل دارند؛ لزومی ندارد عددشان همیشه یکی باشد.
-3. **`--dry-run`** برای بررسی قبل از release عالی است؛ خروجی سطح bump و نسخه بعدی را نشان می‌دهد.
+3. `--dry-run` برای بررسی قبل از release عالی است؛ خروجی سطح bump و نسخه بعدی را نشان می‌دهد.
 4. این سیستم **جایگزین ورژن API** نیست؛ مسیرهای `/api/v1` تغییری نمی‌کنند.
 
 ---
